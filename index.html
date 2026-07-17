@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoFactory | Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <aside class="barra-lateral" id="barraLateral">
+    <div class="marca">
+      <div class="marca-icone"><i data-lucide="sprout"></i></div>
+      <div><strong><span>Eco</span>Factory</strong><small>Indústria Inteligente</small></div>
+    </div>
+
+    <nav class="menu" aria-label="Menu principal">
+      <a class="menu-item ativo" href="#"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></a>
+      <a class="menu-item" href="#"><i data-lucide="settings-2"></i><span>Máquinas</span></a>
+      <a class="menu-item" href="#"><i data-lucide="chart-no-axes-column-increasing"></i><span>Produção</span></a>
+      <a class="menu-item" href="#"><i data-lucide="zap"></i><span>Energia</span></a>
+      <a class="menu-item" href="#"><i data-lucide="leaf"></i><span>Sustentabilidade</span></a>
+      <a class="menu-item" href="#"><i data-lucide="bell"></i><span>Alertas</span><b class="contador">3</b></a>
+      <a class="menu-item" href="#"><i data-lucide="users"></i><span>Funcionários</span></a>
+      <a class="menu-item" href="#"><i data-lucide="file-text"></i><span>Relatórios</span></a>
+      <a class="menu-item" href="#"><i data-lucide="settings"></i><span>Configurações</span></a>
+    </nav>
+    <button class="botao-sair"><i data-lucide="log-out"></i> Sair</button>
+  </aside>
+
+  <main class="conteudo">
+    <header class="cabecalho">
+      <div class="titulo-area">
+        <button class="botao-menu" id="botaoMenu" aria-label="Abrir menu"><i data-lucide="menu"></i></button>
+        <div class="icone-dashboard"><i data-lucide="layout-grid"></i></div>
+        <div><h1>Dashboard</h1><p>Visão geral da fábrica</p></div>
+      </div>
+      <div class="usuario-area">
+        <button class="notificacoes" aria-label="Notificações"><i data-lucide="bell"></i><span>2</span></button>
+        <div class="avatar">AB</div>
+        <div class="usuario-texto"><strong>Arthur Bergs</strong><small>Administrador</small></div>
+        <i data-lucide="chevron-down"></i>
+      </div>
+    </header>
+
+    <section class="painel">
+      <div class="filtro-data"><i data-lucide="calendar-days"></i><span>16/07/2025</span><i data-lucide="chevron-down"></i></div>
+
+      <section class="grade-indicadores">
+        <article class="cartao indicador"><i class="icone azul" data-lucide="factory"></i><div><span>Produção (hoje)</span><strong>1.250</strong><small>peças</small><p class="azul">↑ 12.5% <em>vs ontem</em></p></div></article>
+        <article class="cartao indicador"><i class="icone verde" data-lucide="cog"></i><div><span>Máquinas ativas</span><strong>14 <small>/ 18</small></strong><p class="verde">↑ 77.8% <em>operando</em></p></div></article>
+        <article class="cartao indicador"><i class="icone amarelo" data-lucide="zap"></i><div><span>Consumo de energia</span><strong>2.980</strong><small>kWh</small><p class="amarelo">↑ 8.3% <em>vs ontem</em></p></div></article>
+        <article class="cartao indicador"><i class="icone roxo" data-lucide="leaf"></i><div><span>Emissão de CO₂</span><strong>680</strong><small>kg CO₂</small><p class="roxo">↓ 15.4% <em>vs ontem</em></p></div></article>
+        <article class="cartao eficiencia"><div><span>Eficiência da fábrica</span><p class="verde">↑ 6.7% <em>vs ontem</em></p></div><div class="medidor"><span>85%</span></div></article>
+      </section>
+
+      <section class="grade-meio">
+        <article class="cartao grafico-cartao">
+          <div class="cartao-topo"><h2>Produção <span>(últimas 24h)</span></h2><button>24h <i data-lucide="chevron-down"></i></button></div>
+          <div class="grafico" data-tipo="producao"></div>
+        </article>
+        <article class="cartao grafico-cartao">
+          <div class="cartao-topo"><h2>Consumo de energia <span>(últimas 24h)</span></h2><button>24h <i data-lucide="chevron-down"></i></button></div>
+          <div class="grafico" data-tipo="energia"></div>
+        </article>
+        <article class="cartao maquinas">
+          <div class="cartao-topo"><h2>Status das máquinas</h2><a href="#">Ver todas</a></div>
+          <div id="listaMaquinas"></div>
+        </article>
+      </section>
+
+      <section class="grade-inferior">
+        <article class="cartao alertas">
+          <div class="cartao-topo"><h2>Alertas recentes</h2><a href="#">Ver todos</a></div>
+          <div class="alerta-item"><i class="vermelho" data-lucide="triangle-alert"></i><div><strong>Temperatura alta na Máquina 07</strong><small>85°C detectados</small></div><time>14:32</time></div>
+          <div class="alerta-item"><i class="amarelo" data-lucide="triangle-alert"></i><div><strong>Vibração anormal na Prensa 02</strong><small>Nível acima do permitido</small></div><time>13:47</time></div>
+          <div class="alerta-item"><i class="verde" data-lucide="circle-check-big"></i><div><strong>Manutenção concluída - CNC 03</strong><small>Máquina retornou à operação</small></div><time>11:20</time></div>
+        </article>
+        <article class="cartao produtos">
+          <div class="cartao-topo"><h2>Produção por produto <span>(hoje)</span></h2><a href="#">Ver relatório</a></div>
+          <div id="listaProdutos"></div>
+        </article>
+      </section>
+    </section>
+  </main>
+  <div class="fundo-menu" id="fundoMenu"></div>
+
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
