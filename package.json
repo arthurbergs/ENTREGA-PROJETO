@@ -1,16 +1,19 @@
 {
   "name": "ecofactory-api",
   "version": "1.0.0",
-  "description": "API do projeto EcoFactory desenvolvida no Encontro 7",
+  "description": "Front-end integrado à API EcoFactory com persistência em MySQL",
   "main": "src/servidor.js",
   "scripts": {
     "dev": "nodemon src/servidor.js",
-    "start": "node src/servidor.js"
+    "start": "node src/servidor.js",
+    "dev:sites": "next dev",
+    "build": "next build",
+    "build:sites": "opennextjs-cloudflare build"
   },
   "keywords": [
     "node",
     "express",
-    "postgresql",
+    "mysql",
     "crud"
   ],
   "author": "Arthur Bergs",
@@ -19,9 +22,14 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "pg": "^8.13.1"
+    "mysql2": "^3.14.2"
   },
   "devDependencies": {
-    "nodemon": "^3.1.9"
+    "@opennextjs/cloudflare": "^1.20.2",
+    "next": "^16.2.11",
+    "nodemon": "^3.1.9",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "wrangler": "^4.114.0"
   }
 }

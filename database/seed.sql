@@ -1,4 +1,5 @@
-BEGIN;
+USE ecofactory;
+START TRANSACTION;
 
 INSERT INTO funcionarios (nome, matricula, cargo, email) VALUES
 ('Arthur Bergs', 'FUN-001', 'Administrador', 'arthur@ecofactory.local'),
@@ -27,7 +28,7 @@ INSERT INTO ordens_producao
     (numero, produto_id, maquina_id, responsavel_id, quantidade_planejada,
      quantidade_produzida, status, inicio_previsto, inicio_real)
 SELECT 'OP-2025-001', p.id, m.id, f.id, 500, 450, 'em_andamento',
-       CURRENT_DATE, CURRENT_DATE
+CURRENT_DATE(), CURRENT_DATE()
 FROM produtos p, maquinas m, funcionarios f
 WHERE p.codigo = 'PROD-A' AND m.codigo = 'CNC-01' AND f.matricula = 'FUN-002';
 

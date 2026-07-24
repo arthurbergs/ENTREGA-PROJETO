@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sistema de gestão industrial EcoFactory">
+  <title>EcoFactory | Gestão Industrial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <aside class="barra-lateral" id="barraLateral">
+    <div class="marca">
+      <div class="marca-icone"><i data-lucide="sprout"></i></div>
+      <div><strong><span>Eco</span>Factory</strong><small>Indústria Inteligente</small></div>
+    </div>
+
+    <nav class="menu" aria-label="Menu principal">
+      <a class="menu-item ativo" href="#dashboard" data-pagina="dashboard"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></a>
+      <a class="menu-item" href="#maquinas" data-pagina="maquinas"><i data-lucide="settings-2"></i><span>Máquinas</span></a>
+      <a class="menu-item" href="#producao" data-pagina="producao"><i data-lucide="chart-no-axes-column-increasing"></i><span>Produção</span></a>
+      <a class="menu-item" href="#energia" data-pagina="energia"><i data-lucide="zap"></i><span>Energia</span></a>
+      <a class="menu-item" href="#sustentabilidade" data-pagina="sustentabilidade"><i data-lucide="leaf"></i><span>Sustentabilidade</span></a>
+      <a class="menu-item" href="#alertas" data-pagina="alertas"><i data-lucide="bell"></i><span>Alertas</span><b class="contador" id="contadorAlertas">0</b></a>
+      <a class="menu-item" href="#funcionarios" data-pagina="funcionarios"><i data-lucide="users"></i><span>Funcionários</span></a>
+      <a class="menu-item" href="#relatorios" data-pagina="relatorios"><i data-lucide="file-text"></i><span>Relatórios</span></a>
+      <a class="menu-item" href="#configuracoes" data-pagina="configuracoes"><i data-lucide="settings"></i><span>Configurações</span></a>
+    </nav>
+    <button class="botao-sair" id="botaoSair"><i data-lucide="log-out"></i> Sair</button>
+  </aside>
+
+  <main class="conteudo">
+    <header class="cabecalho">
+      <div class="titulo-area">
+        <button class="botao-menu" id="botaoMenu" aria-label="Abrir menu"><i data-lucide="menu"></i></button>
+        <div class="icone-dashboard"><i id="iconePagina" data-lucide="layout-grid"></i></div>
+        <div><h1 id="tituloPagina">Dashboard</h1><p id="subtituloPagina">Visão geral da fábrica</p></div>
+      </div>
+      <div class="usuario-area">
+        <button class="notificacoes" id="botaoNotificacoes" aria-label="Notificações"><i data-lucide="bell"></i><span id="notificacoesTopo">0</span></button>
+        <div class="avatar">AB</div>
+        <div class="usuario-texto"><strong>Arthur Bergs</strong><small>Administrador</small></div>
+        <i data-lucide="chevron-down"></i>
+      </div>
+    </header>
+
+    <section class="painel" id="conteudoPagina" aria-live="polite"></section>
+  </main>
+
+  <div class="fundo-menu" id="fundoMenu"></div>
+  <div class="modal-fundo" id="modalFundo" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+      <div class="modal-cabecalho"><h2 id="modalTitulo"></h2><button id="fecharModal" aria-label="Fechar"><i data-lucide="x"></i></button></div>
+      <div id="modalConteudo"></div>
+    </section>
+  </div>
+  <div class="mensagem-flutuante" id="mensagemFlutuante"></div>
+
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

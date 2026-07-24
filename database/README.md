@@ -1,27 +1,15 @@
-# Banco de dados EcoFactory
+# Banco MySQL EcoFactory
 
-Modelo PostgreSQL para usuários, funcionários, produtos, máquinas, ordens e
-registros de produção, telemetria (energia, emissão, temperatura e eficiência) e
-alertas de manutenção.
-
-## Criar localmente
-
-Com um banco PostgreSQL já criado e a variável `DATABASE_URL` configurada:
+O `schema.sql` cria o banco `ecofactory`, suas tabelas, relacionamentos,
+restrições e índices em InnoDB. O `seed.sql` insere os dados demonstrativos.
 
 ```powershell
-psql $env:DATABASE_URL -f database/schema.sql
-psql $env:DATABASE_URL -f database/seed.sql
+mysql -u root -p < database/schema.sql
+mysql -u root -p ecofactory < database/seed.sql
 ```
 
-O `schema.sql` deve ser executado uma vez. O `seed.sql` inclui dados de
-demonstração equivalentes aos exibidos no dashboard atual.
+Execute o schema uma vez em um banco vazio. Configure a API pelas variáveis
+`DB_HOST`, `DB_PORTA`, `DB_USUARIO`, `DB_SENHA` e `DB_NOME`.
 
-Não armazene senhas em texto puro. A futura API Node deve gerar hashes com
-bcrypt antes de inserir ou atualizar um usuário.
-
-## Relações principais
-
-- um funcionário pode possuir uma conta de usuário;
-- uma ordem pertence a um produto e pode ser atribuída a máquina e responsável;
-- uma máquina possui várias leituras, produções e alertas;
-- registros horários alimentam os gráficos e indicadores do dashboard.
+Senhas de usuários devem ser armazenadas somente como hashes seguros; o valor
+do seed é apenas ilustrativo.

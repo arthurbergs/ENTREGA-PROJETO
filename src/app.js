@@ -13,7 +13,8 @@ app.use(express.static(path.join(__dirname, "..")));
 app.get("/api", (req, res) => {
   return res.status(200).json({
     mensagem: "API EcoFactory funcionando!",
-    versao: "1.0.0"
+    versao: "2.0.0",
+    banco: "MySQL"
   });
 });
 
@@ -27,19 +28,25 @@ app.use((req, res) => {
 app.use((erro, req, res, next) => {
   console.error(erro);
 
-  if (erro.code === "23505") {
+  if (["ER_ACCESS_DENIED_ERROR", "ECONNREFUSED", "PROTOCOL_CONNECTION_LOST"].includes(erro.code)) {
+    return res.status(503).json({
+      mensagem: "Banco MySQL indisponível. Verifique as configurações do arquivo .env."
+    });
+  }
+
+  if (erro.code === "ER_DUP_ENTRY") {
     return res.status(409).json({
       mensagem: "Já existe um cadastro com esse código."
     });
   }
 
-  if (erro.code === "23503") {
+  if (erro.code === "ER_ROW_IS_REFERENCED_2") {
     return res.status(409).json({
       mensagem: "O registro não pode ser excluído porque está sendo utilizado."
     });
   }
 
-  if (erro.code === "22P02") {
+  if (["ER_TRUNCATED_WRONG_VALUE", "ER_DATA_TOO_LONG"].includes(erro.code)) {
     return res.status(400).json({ mensagem: "Foi informado um valor inválido." });
   }
 

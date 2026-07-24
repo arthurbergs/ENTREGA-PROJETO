@@ -1,149 +1,107 @@
 const banco = require("../configuracao/banco");
 
 const statusPermitidos = ["online", "atencao", "parada", "manutencao"];
+const camposMaquina = `m.id, m.codigo, m.nome, m.tipo, m.localizacao, m.status,
+  m.temperatura_maxima_c, m.ativa, m.criado_em, m.atualizado_em,
+  COALESCE(l.temperatura_c, 0) AS temperatura,
+  COALESCE(l.eficiencia_percentual, 0) AS eficiencia`;
+const juncaoLeitura = `LEFT JOIN leituras_maquina l ON l.id = (
+  SELECT lm.id FROM leituras_maquina lm
+  WHERE lm.maquina_id = m.id ORDER BY lm.registrada_em DESC, lm.id DESC LIMIT 1
+)`;
+
+async function obterMaquina(id, conexao = banco) {
+  const [linhas] = await conexao.query(
+    `SELECT ${camposMaquina} FROM maquinas m ${juncaoLeitura} WHERE m.id = ?`, [id]
+  );
+  return linhas[0];
+}
+
+function validar(corpo) {
+  if (!corpo.codigo || !corpo.nome || !corpo.tipo) return "Código, nome e tipo são obrigatórios.";
+  if (!statusPermitidos.includes(corpo.status || "parada")) return "O status informado é inválido.";
+}
 
 async function listarMaquinas(req, res, next) {
   try {
-    const resultado = await banco.query(
-      `SELECT id, codigo, nome, tipo, localizacao, status,
-              temperatura_maxima_c, ativa, criado_em, atualizado_em
-       FROM maquinas
-       ORDER BY id`
+    const [linhas] = await banco.query(
+      `SELECT ${camposMaquina} FROM maquinas m ${juncaoLeitura} ORDER BY m.id`
     );
-
-    return res.status(200).json(resultado.rows);
-  } catch (erro) {
-    return next(erro);
-  }
+    return res.status(200).json(linhas);
+  } catch (erro) { return next(erro); }
 }
 
 async function buscarMaquina(req, res, next) {
   try {
-    const resultado = await banco.query(
-      `SELECT id, codigo, nome, tipo, localizacao, status,
-              temperatura_maxima_c, ativa, criado_em, atualizado_em
-       FROM maquinas
-       WHERE id = $1`,
-      [req.params.id]
-    );
-
-    if (resultado.rowCount === 0) {
-      return res.status(404).json({ mensagem: "Máquina não encontrada." });
-    }
-
-    return res.status(200).json(resultado.rows[0]);
-  } catch (erro) {
-    return next(erro);
-  }
+    const maquina = await obterMaquina(req.params.id);
+    if (!maquina) return res.status(404).json({ mensagem: "Máquina não encontrada." });
+    return res.status(200).json(maquina);
+  } catch (erro) { return next(erro); }
 }
 
 async function criarMaquina(req, res, next) {
-  const {
-    codigo,
-    nome,
-    tipo,
-    localizacao = null,
-    status = "parada",
-    temperatura_maxima_c = null,
-    ativa = true
-  } = req.body;
-
-  if (!codigo || !nome || !tipo) {
-    return res.status(400).json({
-      mensagem: "Os campos código, nome e tipo são obrigatórios."
-    });
-  }
-
-  if (!statusPermitidos.includes(status)) {
-    return res.status(400).json({ mensagem: "O status informado é inválido." });
-  }
-
+  const mensagem = validar(req.body);
+  if (mensagem) return res.status(400).json({ mensagem });
+  let conexao;
   try {
-    const resultado = await banco.query(
+    conexao = await banco.getConnection();
+    await conexao.beginTransaction();
+    const { codigo, nome, tipo, localizacao = null, status = "parada",
+      temperatura_maxima_c = null, ativa = true, temperatura = 0, eficiencia = 0 } = req.body;
+    const [resultado] = await conexao.query(
       `INSERT INTO maquinas
-        (codigo, nome, tipo, localizacao, status, temperatura_maxima_c, ativa)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING *`,
+       (codigo, nome, tipo, localizacao, status, temperatura_maxima_c, ativa)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [codigo, nome, tipo, localizacao, status, temperatura_maxima_c, ativa]
     );
-
-    return res.status(201).json(resultado.rows[0]);
+    await conexao.query(
+      `INSERT INTO leituras_maquina (maquina_id, temperatura_c, eficiencia_percentual)
+       VALUES (?, ?, ?)`, [resultado.insertId, temperatura, eficiencia]
+    );
+    await conexao.commit();
+    return res.status(201).json(await obterMaquina(resultado.insertId));
   } catch (erro) {
+    if (conexao) await conexao.rollback();
     return next(erro);
-  }
+  } finally { if (conexao) conexao.release(); }
 }
 
 async function atualizarMaquina(req, res, next) {
-  const {
-    codigo,
-    nome,
-    tipo,
-    localizacao = null,
-    status,
-    temperatura_maxima_c = null,
-    ativa = true
-  } = req.body;
-
-  if (!codigo || !nome || !tipo || !status) {
-    return res.status(400).json({
-      mensagem: "Código, nome, tipo e status são obrigatórios."
-    });
-  }
-
-  if (!statusPermitidos.includes(status)) {
-    return res.status(400).json({ mensagem: "O status informado é inválido." });
-  }
-
+  const mensagem = validar(req.body);
+  if (mensagem) return res.status(400).json({ mensagem });
+  let conexao;
   try {
-    const resultado = await banco.query(
-      `UPDATE maquinas
-       SET codigo = $1, nome = $2, tipo = $3, localizacao = $4,
-           status = $5, temperatura_maxima_c = $6, ativa = $7
-       WHERE id = $8
-       RETURNING *`,
-      [
-        codigo,
-        nome,
-        tipo,
-        localizacao,
-        status,
-        temperatura_maxima_c,
-        ativa,
-        req.params.id
-      ]
+    conexao = await banco.getConnection();
+    await conexao.beginTransaction();
+    const { codigo, nome, tipo, localizacao = null, status = "parada",
+      temperatura_maxima_c = null, ativa = true, temperatura = 0, eficiencia = 0 } = req.body;
+    const [resultado] = await conexao.query(
+      `UPDATE maquinas SET codigo = ?, nome = ?, tipo = ?, localizacao = ?,
+       status = ?, temperatura_maxima_c = ?, ativa = ? WHERE id = ?`,
+      [codigo, nome, tipo, localizacao, status, temperatura_maxima_c, ativa, req.params.id]
     );
-
-    if (resultado.rowCount === 0) {
+    if (!resultado.affectedRows) {
+      await conexao.rollback();
       return res.status(404).json({ mensagem: "Máquina não encontrada." });
     }
-
-    return res.status(200).json(resultado.rows[0]);
+    await conexao.query(
+      `INSERT INTO leituras_maquina (maquina_id, temperatura_c, eficiencia_percentual)
+       VALUES (?, ?, ?)`, [req.params.id, temperatura, eficiencia]
+    );
+    await conexao.commit();
+    return res.status(200).json(await obterMaquina(req.params.id));
   } catch (erro) {
+    if (conexao) await conexao.rollback();
     return next(erro);
-  }
+  } finally { if (conexao) conexao.release(); }
 }
 
 async function excluirMaquina(req, res, next) {
   try {
-    const resultado = await banco.query(
-      "DELETE FROM maquinas WHERE id = $1 RETURNING id",
-      [req.params.id]
-    );
-
-    if (resultado.rowCount === 0) {
-      return res.status(404).json({ mensagem: "Máquina não encontrada." });
-    }
-
+    const [resultado] = await banco.query("DELETE FROM maquinas WHERE id = ?", [req.params.id]);
+    if (!resultado.affectedRows) return res.status(404).json({ mensagem: "Máquina não encontrada." });
     return res.status(204).send();
-  } catch (erro) {
-    return next(erro);
-  }
+  } catch (erro) { return next(erro); }
 }
 
-module.exports = {
-  listarMaquinas,
-  buscarMaquina,
-  criarMaquina,
-  atualizarMaquina,
-  excluirMaquina
-};
+module.exports = { listarMaquinas, buscarMaquina, criarMaquina, atualizarMaquina, excluirMaquina };

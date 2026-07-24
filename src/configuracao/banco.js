@@ -1,11 +1,14 @@
-const { Pool } = require("pg");
+const mysql = require("mysql2/promise");
 
-const banco = new Pool({
-  connectionString: process.env.DATABASE_URL
-});
-
-banco.on("error", (erro) => {
-  console.error("Ocorreu um erro inesperado no banco:", erro.message);
+const banco = mysql.createPool({
+  host: process.env.DB_HOST || "localhost",
+  port: Number(process.env.DB_PORTA || 3306),
+  user: process.env.DB_USUARIO || "root",
+  password: process.env.DB_SENHA || "",
+  database: process.env.DB_NOME || "ecofactory",
+  waitForConnections: true,
+  connectionLimit: 10,
+  charset: "utf8mb4"
 });
 
 module.exports = banco;

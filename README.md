@@ -1,78 +1,65 @@
-# EcoFactory - Encontro 7
+# EcoFactory — Encontro 8
 
-Neste encontro foi criado o back-end do projeto usando Node.js, Express e
-PostgreSQL. A API possui operações CRUD completas para máquinas e produtos.
+Front-end integrado a uma API REST real, com dados persistidos em **MySQL**.
+O painel consome máquinas e produtos com `fetch`; o cadastro, a edição e a
+exclusão de máquinas são persistidos pela API. A interface também informa
+carregamento, sucesso e erros.
 
-## Tecnologias utilizadas
+## Tecnologias
 
-- Node.js;
-- Express;
-- PostgreSQL;
-- biblioteca `pg` para conectar com o banco;
-- dotenv para variáveis de ambiente;
-- CORS para permitir o acesso do front-end.
+- HTML, CSS e JavaScript;
+- Node.js e Express;
+- MySQL e driver `mysql2`;
+- CORS e dotenv.
 
 ## Como executar
 
-É necessário ter o Node.js e o PostgreSQL instalados.
+Pré-requisitos: Node.js e MySQL 8 ou superior.
 
-1. Crie um banco chamado `ecofactory`.
-2. Execute os arquivos do banco:
-
-```powershell
-psql -d ecofactory -f database/schema.sql
-psql -d ecofactory -f database/seed.sql
-```
-
-3. Instale as dependências:
+1. Crie as tabelas e os dados demonstrativos:
 
 ```powershell
-npm install
+mysql -u root -p < database/schema.sql
+mysql -u root -p ecofactory < database/seed.sql
 ```
 
-4. Copie `.env.exemplo` para `.env` e altere a conexão, se necessário:
+2. Copie `.env.exemplo` para `.env` e informe sua senha:
 
 ```env
 PORTA=3000
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/ecofactory
+DB_HOST=localhost
+DB_PORTA=3306
+DB_USUARIO=root
+DB_SENHA=sua_senha
+DB_NOME=ecofactory
 ```
 
-5. Inicie a API:
+3. Instale e execute:
 
 ```powershell
+npm install
 npm run dev
 ```
 
-A API ficará disponível em `http://localhost:3000`.
+4. Acesse `http://localhost:3000`. Não abra o `index.html` diretamente, pois o
+front-end usa as rotas `/api` do mesmo servidor.
 
-## Rotas CRUD
+## Rotas
 
-| Método | Rota | O que faz |
+| Método | Rota | Ação |
 |---|---|---|
-| GET | `/api/maquinas` | Lista as máquinas |
-| GET | `/api/maquinas/:id` | Busca uma máquina |
-| POST | `/api/maquinas` | Cadastra uma máquina |
-| PUT | `/api/maquinas/:id` | Atualiza uma máquina |
-| DELETE | `/api/maquinas/:id` | Exclui uma máquina |
-| GET | `/api/produtos` | Lista os produtos |
-| GET | `/api/produtos/:id` | Busca um produto |
-| POST | `/api/produtos` | Cadastra um produto |
-| PUT | `/api/produtos/:id` | Atualiza um produto |
-| DELETE | `/api/produtos/:id` | Exclui um produto |
+| GET | `/api/maquinas` | Listar máquinas e última leitura |
+| GET | `/api/maquinas/:id` | Buscar máquina |
+| POST | `/api/maquinas` | Cadastrar máquina |
+| PUT | `/api/maquinas/:id` | Atualizar máquina |
+| DELETE | `/api/maquinas/:id` | Excluir máquina |
+| GET | `/api/produtos` | Listar produtos |
+| GET | `/api/produtos/:id` | Buscar produto |
+| POST | `/api/produtos` | Cadastrar produto |
+| PUT | `/api/produtos/:id` | Atualizar produto |
+| DELETE | `/api/produtos/:id` | Excluir produto |
 
-Exemplo para cadastrar um produto:
-
-```json
-{
-  "codigo": "PROD-E",
-  "nome": "Produto E",
-  "descricao": "Peça criada para teste da API",
-  "unidade": "peca",
-  "ativo": true
-}
-```
-
-Exemplo para cadastrar uma máquina:
+Exemplo de máquina:
 
 ```json
 {
@@ -81,7 +68,12 @@ Exemplo para cadastrar uma máquina:
   "tipo": "Corte",
   "localizacao": "Linha 3",
   "status": "online",
-  "temperatura_maxima_c": 75,
+  "temperatura": 48,
+  "eficiencia": 82,
   "ativa": true
 }
 ```
+
+As demais áreas do painel continuam demonstrativas e locais; o escopo da
+integração do Encontro 8 está concentrado nos recursos já expostos pela API:
+máquinas e produtos.

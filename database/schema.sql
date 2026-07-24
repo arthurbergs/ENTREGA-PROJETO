@@ -1,139 +1,121 @@
-BEGIN;
-
-CREATE TYPE perfil_usuario AS ENUM ('administrador', 'gestor', 'operador');
-CREATE TYPE status_maquina AS ENUM ('online', 'atencao', 'parada', 'manutencao');
-CREATE TYPE status_ordem AS ENUM ('planejada', 'em_andamento', 'pausada', 'concluida', 'cancelada');
-CREATE TYPE nivel_alerta AS ENUM ('informacao', 'atencao', 'critico');
+CREATE DATABASE IF NOT EXISTS ecofactory
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE ecofactory;
 
 CREATE TABLE funcionarios (
-    id BIGSERIAL PRIMARY KEY,
-    nome VARCHAR(120) NOT NULL,
-    matricula VARCHAR(30) NOT NULL UNIQUE,
-    cargo VARCHAR(80) NOT NULL,
-    email VARCHAR(180) NOT NULL UNIQUE,
-    telefone VARCHAR(25),
-    ativo BOOLEAN NOT NULL DEFAULT TRUE,
-    criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  nome VARCHAR(120) NOT NULL,
+  matricula VARCHAR(30) NOT NULL UNIQUE,
+  cargo VARCHAR(80) NOT NULL,
+  email VARCHAR(180) NOT NULL UNIQUE,
+  telefone VARCHAR(25),
+  ativo BOOLEAN NOT NULL DEFAULT TRUE,
+  criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  atualizado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
 
 CREATE TABLE usuarios (
-    id BIGSERIAL PRIMARY KEY,
-    funcionario_id BIGINT UNIQUE REFERENCES funcionarios(id) ON DELETE SET NULL,
-    nome VARCHAR(120) NOT NULL,
-    email VARCHAR(180) NOT NULL UNIQUE,
-    senha_hash TEXT NOT NULL,
-    perfil perfil_usuario NOT NULL DEFAULT 'operador',
-    ativo BOOLEAN NOT NULL DEFAULT TRUE,
-    ultimo_login_em TIMESTAMPTZ,
-    criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  funcionario_id BIGINT UNSIGNED UNIQUE,
+  nome VARCHAR(120) NOT NULL,
+  email VARCHAR(180) NOT NULL UNIQUE,
+  senha_hash TEXT NOT NULL,
+  perfil ENUM('administrador','gestor','operador') NOT NULL DEFAULT 'operador',
+  ativo BOOLEAN NOT NULL DEFAULT TRUE,
+  ultimo_login_em DATETIME,
+  criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  atualizado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_usuario_funcionario FOREIGN KEY (funcionario_id)
+    REFERENCES funcionarios(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
 
 CREATE TABLE produtos (
-    id BIGSERIAL PRIMARY KEY,
-    codigo VARCHAR(30) NOT NULL UNIQUE,
-    nome VARCHAR(120) NOT NULL,
-    descricao TEXT,
-    unidade VARCHAR(20) NOT NULL DEFAULT 'peca',
-    ativo BOOLEAN NOT NULL DEFAULT TRUE,
-    criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  codigo VARCHAR(30) NOT NULL UNIQUE,
+  nome VARCHAR(120) NOT NULL,
+  descricao TEXT,
+  unidade VARCHAR(20) NOT NULL DEFAULT 'peca',
+  ativo BOOLEAN NOT NULL DEFAULT TRUE,
+  criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  atualizado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
 
 CREATE TABLE maquinas (
-    id BIGSERIAL PRIMARY KEY,
-    codigo VARCHAR(30) NOT NULL UNIQUE,
-    nome VARCHAR(120) NOT NULL,
-    tipo VARCHAR(80) NOT NULL,
-    localizacao VARCHAR(120),
-    status status_maquina NOT NULL DEFAULT 'parada',
-    temperatura_maxima_c NUMERIC(6,2),
-    ativa BOOLEAN NOT NULL DEFAULT TRUE,
-    criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CHECK (temperatura_maxima_c IS NULL OR temperatura_maxima_c > 0)
-);
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  codigo VARCHAR(30) NOT NULL UNIQUE,
+  nome VARCHAR(120) NOT NULL,
+  tipo VARCHAR(80) NOT NULL,
+  localizacao VARCHAR(120),
+  status ENUM('online','atencao','parada','manutencao') NOT NULL DEFAULT 'parada',
+  temperatura_maxima_c DECIMAL(6,2),
+  ativa BOOLEAN NOT NULL DEFAULT TRUE,
+  criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  atualizado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CHECK (temperatura_maxima_c IS NULL OR temperatura_maxima_c > 0)
+) ENGINE=InnoDB;
 
 CREATE TABLE ordens_producao (
-    id BIGSERIAL PRIMARY KEY,
-    numero VARCHAR(30) NOT NULL UNIQUE,
-    produto_id BIGINT NOT NULL REFERENCES produtos(id) ON DELETE RESTRICT,
-    maquina_id BIGINT REFERENCES maquinas(id) ON DELETE SET NULL,
-    responsavel_id BIGINT REFERENCES funcionarios(id) ON DELETE SET NULL,
-    quantidade_planejada INTEGER NOT NULL CHECK (quantidade_planejada > 0),
-    quantidade_produzida INTEGER NOT NULL DEFAULT 0 CHECK (quantidade_produzida >= 0),
-    status status_ordem NOT NULL DEFAULT 'planejada',
-    inicio_previsto TIMESTAMPTZ,
-    fim_previsto TIMESTAMPTZ,
-    inicio_real TIMESTAMPTZ,
-    fim_real TIMESTAMPTZ,
-    observacoes TEXT,
-    criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CHECK (fim_previsto IS NULL OR inicio_previsto IS NULL OR fim_previsto >= inicio_previsto),
-    CHECK (fim_real IS NULL OR inicio_real IS NULL OR fim_real >= inicio_real)
-);
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  numero VARCHAR(30) NOT NULL UNIQUE,
+  produto_id BIGINT UNSIGNED NOT NULL,
+  maquina_id BIGINT UNSIGNED,
+  responsavel_id BIGINT UNSIGNED,
+  quantidade_planejada INT NOT NULL,
+  quantidade_produzida INT NOT NULL DEFAULT 0,
+  status ENUM('planejada','em_andamento','pausada','concluida','cancelada') NOT NULL DEFAULT 'planejada',
+  inicio_previsto DATETIME, fim_previsto DATETIME,
+  inicio_real DATETIME, fim_real DATETIME,
+  observacoes TEXT,
+  criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  atualizado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_ordem_produto FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE RESTRICT,
+  CONSTRAINT fk_ordem_maquina FOREIGN KEY (maquina_id) REFERENCES maquinas(id) ON DELETE SET NULL,
+  CONSTRAINT fk_ordem_responsavel FOREIGN KEY (responsavel_id) REFERENCES funcionarios(id) ON DELETE SET NULL,
+  CHECK (quantidade_planejada > 0),
+  CHECK (quantidade_produzida >= 0)
+) ENGINE=InnoDB;
 
 CREATE TABLE leituras_maquina (
-    id BIGSERIAL PRIMARY KEY,
-    maquina_id BIGINT NOT NULL REFERENCES maquinas(id) ON DELETE CASCADE,
-    registrada_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    temperatura_c NUMERIC(6,2),
-    vibracao_mm_s NUMERIC(8,3),
-    eficiencia_percentual NUMERIC(5,2),
-    consumo_kwh NUMERIC(12,3),
-    emissao_co2_kg NUMERIC(12,3),
-    CHECK (eficiencia_percentual BETWEEN 0 AND 100),
-    CHECK (consumo_kwh IS NULL OR consumo_kwh >= 0),
-    CHECK (emissao_co2_kg IS NULL OR emissao_co2_kg >= 0)
-);
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  maquina_id BIGINT UNSIGNED NOT NULL,
+  registrada_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  temperatura_c DECIMAL(6,2),
+  vibracao_mm_s DECIMAL(8,3),
+  eficiencia_percentual DECIMAL(5,2),
+  consumo_kwh DECIMAL(12,3),
+  emissao_co2_kg DECIMAL(12,3),
+  CONSTRAINT fk_leitura_maquina FOREIGN KEY (maquina_id) REFERENCES maquinas(id) ON DELETE CASCADE,
+  CHECK (eficiencia_percentual BETWEEN 0 AND 100),
+  CHECK (consumo_kwh IS NULL OR consumo_kwh >= 0),
+  CHECK (emissao_co2_kg IS NULL OR emissao_co2_kg >= 0),
+  INDEX idx_leituras_maquina_data (maquina_id, registrada_em)
+) ENGINE=InnoDB;
 
 CREATE TABLE registros_producao (
-    id BIGSERIAL PRIMARY KEY,
-    ordem_id BIGINT NOT NULL REFERENCES ordens_producao(id) ON DELETE CASCADE,
-    maquina_id BIGINT NOT NULL REFERENCES maquinas(id) ON DELETE RESTRICT,
-    quantidade INTEGER NOT NULL CHECK (quantidade > 0),
-    rejeitadas INTEGER NOT NULL DEFAULT 0 CHECK (rejeitadas >= 0),
-    registrada_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CHECK (rejeitadas <= quantidade)
-);
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  ordem_id BIGINT UNSIGNED NOT NULL,
+  maquina_id BIGINT UNSIGNED NOT NULL,
+  quantidade INT NOT NULL,
+  rejeitadas INT NOT NULL DEFAULT 0,
+  registrada_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_registro_ordem FOREIGN KEY (ordem_id) REFERENCES ordens_producao(id) ON DELETE CASCADE,
+  CONSTRAINT fk_registro_maquina FOREIGN KEY (maquina_id) REFERENCES maquinas(id) ON DELETE RESTRICT,
+  CHECK (quantidade > 0),
+  CHECK (rejeitadas BETWEEN 0 AND quantidade),
+  INDEX idx_producao_data (registrada_em)
+) ENGINE=InnoDB;
 
 CREATE TABLE alertas (
-    id BIGSERIAL PRIMARY KEY,
-    maquina_id BIGINT REFERENCES maquinas(id) ON DELETE SET NULL,
-    nivel nivel_alerta NOT NULL,
-    titulo VARCHAR(180) NOT NULL,
-    descricao TEXT,
-    resolvido BOOLEAN NOT NULL DEFAULT FALSE,
-    criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    resolvido_em TIMESTAMPTZ,
-    resolvido_por BIGINT REFERENCES usuarios(id) ON DELETE SET NULL,
-    CHECK ((resolvido = FALSE AND resolvido_em IS NULL) OR resolvido = TRUE)
-);
-
-CREATE INDEX idx_leituras_maquina_data ON leituras_maquina (maquina_id, registrada_em DESC);
-CREATE INDEX idx_producao_data ON registros_producao (registrada_em DESC);
-CREATE INDEX idx_ordens_status ON ordens_producao (status);
-CREATE INDEX idx_alertas_abertos ON alertas (criado_em DESC) WHERE resolvido = FALSE;
-
-CREATE OR REPLACE FUNCTION atualizar_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.atualizado_em = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER funcionarios_atualizado BEFORE UPDATE ON funcionarios
-FOR EACH ROW EXECUTE FUNCTION atualizar_timestamp();
-CREATE TRIGGER usuarios_atualizado BEFORE UPDATE ON usuarios
-FOR EACH ROW EXECUTE FUNCTION atualizar_timestamp();
-CREATE TRIGGER produtos_atualizado BEFORE UPDATE ON produtos
-FOR EACH ROW EXECUTE FUNCTION atualizar_timestamp();
-CREATE TRIGGER maquinas_atualizado BEFORE UPDATE ON maquinas
-FOR EACH ROW EXECUTE FUNCTION atualizar_timestamp();
-CREATE TRIGGER ordens_atualizado BEFORE UPDATE ON ordens_producao
-FOR EACH ROW EXECUTE FUNCTION atualizar_timestamp();
-
-COMMIT;
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  maquina_id BIGINT UNSIGNED,
+  nivel ENUM('informacao','atencao','critico') NOT NULL,
+  titulo VARCHAR(180) NOT NULL,
+  descricao TEXT,
+  resolvido BOOLEAN NOT NULL DEFAULT FALSE,
+  criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  resolvido_em DATETIME,
+  resolvido_por BIGINT UNSIGNED,
+  CONSTRAINT fk_alerta_maquina FOREIGN KEY (maquina_id) REFERENCES maquinas(id) ON DELETE SET NULL,
+  CONSTRAINT fk_alerta_usuario FOREIGN KEY (resolvido_por) REFERENCES usuarios(id) ON DELETE SET NULL,
+  INDEX idx_alertas_abertos (resolvido, criado_em)
+) ENGINE=InnoDB;
