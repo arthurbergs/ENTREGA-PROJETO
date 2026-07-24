@@ -1,43 +1,18 @@
-// EcoFactory - painel administrativo
-// Os dados ficam no navegador enquanto a API não estiver conectada ao front-end.
+import { dadosIniciais, energia24h, producao24h } from "./dados/dados-iniciais.js";
+import { modoHospedado, requisitarAPI } from "./servicos/api.js";
+import { carregarDadosLocais, salvarDadosLocais } from "./servicos/armazenamento.js";
+import {
+  classeStatus,
+  formatarNumero,
+  proximoId,
+  textoStatus
+} from "./utilitarios/formatacao.js";
 
-const dadosIniciais = {
-  maquinas: [
-    { id: 1, codigo: "CNC-01", nome: "CNC 01", tipo: "CNC", localizacao: "Linha 1", status: "online", temperatura: 42, eficiencia: 75 },
-    { id: 2, codigo: "PRENSA-02", nome: "Prensa 02", tipo: "Prensa", localizacao: "Linha 1", status: "atencao", temperatura: 65, eficiencia: 60 },
-    { id: 3, codigo: "SOLDA-03", nome: "Solda 03", tipo: "Solda", localizacao: "Linha 2", status: "online", temperatura: 38, eficiencia: 90 },
-    { id: 4, codigo: "PINTURA-04", nome: "Pintura 04", tipo: "Pintura", localizacao: "Linha 2", status: "parada", temperatura: 0, eficiencia: 0 },
-    { id: 5, codigo: "CNC-05", nome: "CNC 05", tipo: "CNC", localizacao: "Linha 3", status: "online", temperatura: 45, eficiencia: 80 }
-  ],
-  producoes: [
-    { id: 1, ordem: "OP-2026-001", produto: "Produto A", maquina: "CNC 01", quantidade: 450, meta: 500, status: "em_andamento", data: "2026-07-23" },
-    { id: 2, ordem: "OP-2026-002", produto: "Produto B", maquina: "Prensa 02", quantidade: 320, meta: 400, status: "em_andamento", data: "2026-07-23" },
-    { id: 3, ordem: "OP-2026-003", produto: "Produto C", maquina: "Solda 03", quantidade: 280, meta: 280, status: "concluida", data: "2026-07-23" },
-    { id: 4, ordem: "OP-2026-004", produto: "Produto D", maquina: "Pintura 04", quantidade: 150, meta: 300, status: "pausada", data: "2026-07-23" }
-  ],
-  alertas: [
-    { id: 1, nivel: "critico", titulo: "Temperatura alta na Máquina 07", descricao: "85°C detectados", horario: "14:32", resolvido: false },
-    { id: 2, nivel: "atencao", titulo: "Vibração anormal na Prensa 02", descricao: "Nível acima do permitido", horario: "13:47", resolvido: false },
-    { id: 3, nivel: "informacao", titulo: "Manutenção concluída - CNC 03", descricao: "Máquina retornou à operação", horario: "11:20", resolvido: true }
-  ],
-  funcionarios: [
-    { id: 1, nome: "Arthur Bergs", matricula: "FUN-001", cargo: "Administrador", email: "arthur@ecofactory.local", turno: "Comercial", ativo: true },
-    { id: 2, nome: "Marina Souza", matricula: "FUN-002", cargo: "Supervisora de produção", email: "marina@ecofactory.local", turno: "Manhã", ativo: true },
-    { id: 3, nome: "Carlos Lima", matricula: "FUN-003", cargo: "Operador", email: "carlos@ecofactory.local", turno: "Tarde", ativo: true }
-  ],
-  configuracoes: { fabrica: "EcoFactory", email: "contato@ecofactory.local", metaEnergia: 3200, metaCo2: 800, notificacoes: true }
-};
-
-const producao24h = [430, 520, 710, 820, 1000, 1050, 1010, 1190, 1400, 1160, 1210, 930, 900, 920, 1010, 1160, 1080, 1130, 1090, 1420, 1600, 1280, 1550, 1710];
-const energia24h = [1450, 1570, 1900, 1980, 1780, 1910, 2550, 2590, 2450, 2700, 2410, 2120, 2470, 2600, 2950, 2550, 2740, 2450, 2850, 2670, 2900, 3000];
-
-let dados = carregarDados();
+let dados = carregarDadosLocais();
 dados.produtos = [];
 let paginaAtual = "dashboard";
 let apiCarregando = true;
 let apiErro = "";
-const API_URL = "/api";
-const MODO_HOSPEDADO = location.hostname.endsWith(".chatgpt.site");
 
 const paginas = {
   dashboard: { titulo: "Dashboard", subtitulo: "Visão geral da fábrica", icone: "layout-grid", renderizar: paginaDashboard },
@@ -51,34 +26,13 @@ const paginas = {
   configuracoes: { titulo: "Configurações", subtitulo: "Preferências gerais do sistema", icone: "settings", renderizar: paginaConfiguracoes }
 };
 
-function carregarDados() {
-  try {
-    const salvos = JSON.parse(localStorage.getItem("ecofactory_dados"));
-    return salvos || structuredClone(dadosIniciais);
-  } catch {
-    return structuredClone(dadosIniciais);
-  }
-}
-
 function salvarDados() {
-  localStorage.setItem("ecofactory_dados", JSON.stringify(dados));
+  salvarDadosLocais(dados);
   atualizarContadores();
 }
 
-async function requisitarAPI(caminho, opcoes = {}) {
-  const resposta = await fetch(`${API_URL}${caminho}`, {
-    headers: { "Content-Type": "application/json", ...opcoes.headers },
-    ...opcoes
-  });
-  if (!resposta.ok) {
-    const corpo = await resposta.json().catch(() => ({}));
-    throw new Error(corpo.mensagem || `Erro ${resposta.status} ao acessar a API.`);
-  }
-  return resposta.status === 204 ? null : resposta.json();
-}
-
 async function carregarDadosDaAPI() {
-  if (MODO_HOSPEDADO) {
+  if (modoHospedado) {
     apiCarregando = false;
     apiErro = "";
     navegar(paginaAtual);
@@ -107,29 +61,6 @@ async function carregarDadosDaAPI() {
   }
 }
 
-function textoStatus(status) {
-  const textos = {
-    online: "Online", atencao: "Atenção", parada: "Parada", manutencao: "Manutenção",
-    em_andamento: "Em andamento", concluida: "Concluída", pausada: "Pausada", planejada: "Planejada",
-    critico: "Crítico", informacao: "Informação"
-  };
-  return textos[status] || status;
-}
-
-function classeStatus(status) {
-  if (["online", "concluida", "informacao"].includes(status)) return "verde";
-  if (["atencao", "pausada", "planejada"].includes(status)) return "amarelo";
-  if (["critico", "parada"].includes(status)) return "vermelho";
-  return "azul";
-}
-
-function formatarNumero(numero) {
-  return Number(numero).toLocaleString("pt-BR");
-}
-
-function proximoId(lista) {
-  return lista.length ? Math.max(...lista.map(item => Number(item.id))) + 1 : 1;
-}
 
 function mostrarMensagem(texto, tipo = "sucesso") {
   const mensagem = document.querySelector("#mensagemFlutuante");
@@ -447,7 +378,7 @@ function tratarAcao(acao, id, elemento) {
 
 async function excluirItem(lista, id, nome) {
   if (!confirm(`Deseja realmente excluir este ${nome}?`)) return;
-  if (lista === "maquinas" && !MODO_HOSPEDADO) {
+  if (lista === "maquinas" && !modoHospedado) {
     try {
       await requisitarAPI(`/maquinas/${id}`, { method: "DELETE" });
     } catch (erro) {
@@ -480,7 +411,7 @@ async function salvarMaquina(formulario) {
     eficiencia: Number(valores.eficiencia),
     ativa: true
   };
-  if (MODO_HOSPEDADO) {
+  if (modoHospedado) {
     const maquina = { ...corpo, id: id || proximoId(dados.maquinas) };
     if (id) dados.maquinas[dados.maquinas.findIndex(item => item.id === id)] = maquina;
     else dados.maquinas.push(maquina);

@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 const app = require("./app");
-const banco = require("./configuracao/banco");
+const banco = require("./config/banco");
 
 const porta = process.env.PORTA || 3000;
 

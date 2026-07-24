@@ -2,13 +2,14 @@
   "name": "ecofactory-api",
   "version": "1.0.0",
   "description": "Front-end integrado à API EcoFactory com persistência em MySQL",
-  "main": "src/servidor.js",
+  "main": "backend/src/servidor.js",
   "scripts": {
-    "dev": "nodemon src/servidor.js",
-    "start": "node src/servidor.js",
+    "dev": "nodemon backend/src/servidor.js",
+    "start": "node backend/src/servidor.js",
     "dev:sites": "next dev",
     "build": "next build",
-    "build:sites": "opennextjs-cloudflare build"
+    "build:sites": "opennextjs-cloudflare build",
+    "check": "node scripts/verificar-projeto.js"
   },
   "keywords": [
     "node",

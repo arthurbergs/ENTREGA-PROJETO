@@ -1,29 +1,58 @@
 # EcoFactory — Encontro 8
 
-Front-end integrado a uma API REST real, com dados persistidos em **MySQL**.
-O painel consome máquinas e produtos com `fetch`; o cadastro, a edição e a
-exclusão de máquinas são persistidos pela API. A interface também informa
-carregamento, sucesso e erros.
+Painel industrial com front-end integrado a uma API REST e persistência em
+MySQL. O projeto está organizado por responsabilidade para facilitar manutenção,
+estudo e evolução.
+
+## Estrutura
+
+```text
+ENTREGA-PROJETO/
+├── backend/
+│   └── src/
+│       ├── config/          # conexão MySQL
+│       ├── controladores/   # entrada e saída HTTP
+│       ├── middlewares/     # erros e rotas inexistentes
+│       ├── repositorios/    # consultas e transações SQL
+│       ├── rotas/           # endpoints da API
+│       ├── app.js
+│       └── servidor.js
+├── database/
+│   ├── schema.sql
+│   └── seed.sql
+├── docs/                    # documentação acadêmica
+├── public/
+│   ├── assets/
+│   │   ├── css/
+│   │   └── js/
+│   │       ├── dados/
+│   │       ├── servicos/
+│   │       └── utilitarios/
+│   └── index.html
+├── scripts/                 # validações do projeto
+└── package.json
+```
 
 ## Tecnologias
 
-- HTML, CSS e JavaScript;
+- HTML, CSS e JavaScript com módulos ES;
 - Node.js e Express;
-- MySQL e driver `mysql2`;
+- MySQL com `mysql2`;
+- Next/OpenNext apenas para empacotamento da hospedagem;
 - CORS e dotenv.
 
-## Como executar
+## Execução local com MySQL
 
 Pré-requisitos: Node.js e MySQL 8 ou superior.
 
-1. Crie as tabelas e os dados demonstrativos:
+1. Crie a estrutura e carregue os dados:
 
 ```powershell
 mysql -u root -p < database/schema.sql
 mysql -u root -p ecofactory < database/seed.sql
 ```
 
-2. Copie `.env.exemplo` para `.env` e informe sua senha:
+2. Copie `.env.exemplo` para `.env` e informe suas credenciais:
 
 ```env
 PORTA=3000
@@ -34,17 +63,26 @@ DB_SENHA=sua_senha
 DB_NOME=ecofactory
 ```
 
-3. Instale e execute:
+3. Instale as dependências e execute:
 
 ```powershell
 npm install
 npm run dev
 ```
 
-4. Acesse `http://localhost:3000`. Não abra o `index.html` diretamente, pois o
-front-end usa as rotas `/api` do mesmo servidor.
+4. Acesse `http://localhost:3000`.
 
-## Rotas
+## Scripts
+
+| Comando | Finalidade |
+|---|---|
+| `npm run dev` | Inicia API e front-end com reinício automático |
+| `npm start` | Inicia o servidor sem nodemon |
+| `npm run check` | Verifica estrutura e sintaxe dos arquivos |
+| `npm run build` | Gera o build Next |
+| `npm run build:sites` | Gera o pacote OpenNext da hospedagem |
+
+## API
 
 | Método | Rota | Ação |
 |---|---|---|
@@ -59,21 +97,6 @@ front-end usa as rotas `/api` do mesmo servidor.
 | PUT | `/api/produtos/:id` | Atualizar produto |
 | DELETE | `/api/produtos/:id` | Excluir produto |
 
-Exemplo de máquina:
-
-```json
-{
-  "codigo": "CORTE-06",
-  "nome": "Cortadora 06",
-  "tipo": "Corte",
-  "localizacao": "Linha 3",
-  "status": "online",
-  "temperatura": 48,
-  "eficiencia": 82,
-  "ativa": true
-}
-```
-
-As demais áreas do painel continuam demonstrativas e locais; o escopo da
-integração do Encontro 8 está concentrado nos recursos já expostos pela API:
-máquinas e produtos.
+Na versão hospedada, os cadastros demonstrativos são mantidos no navegador. A
+persistência MySQL é utilizada ao executar o servidor Node localmente ou em uma
+hospedagem com credenciais de banco configuradas.
