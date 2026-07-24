@@ -37,6 +37,7 @@ let paginaAtual = "dashboard";
 let apiCarregando = true;
 let apiErro = "";
 const API_URL = "/api";
+const MODO_HOSPEDADO = location.hostname.endsWith(".chatgpt.site");
 
 const paginas = {
   dashboard: { titulo: "Dashboard", subtitulo: "Visão geral da fábrica", icone: "layout-grid", renderizar: paginaDashboard },
@@ -77,6 +78,12 @@ async function requisitarAPI(caminho, opcoes = {}) {
 }
 
 async function carregarDadosDaAPI() {
+  if (MODO_HOSPEDADO) {
+    apiCarregando = false;
+    apiErro = "";
+    navegar(paginaAtual);
+    return;
+  }
   apiCarregando = true;
   apiErro = "";
   navegar(paginaAtual);
@@ -440,7 +447,7 @@ function tratarAcao(acao, id, elemento) {
 
 async function excluirItem(lista, id, nome) {
   if (!confirm(`Deseja realmente excluir este ${nome}?`)) return;
-  if (lista === "maquinas") {
+  if (lista === "maquinas" && !MODO_HOSPEDADO) {
     try {
       await requisitarAPI(`/maquinas/${id}`, { method: "DELETE" });
     } catch (erro) {
@@ -473,6 +480,13 @@ async function salvarMaquina(formulario) {
     eficiencia: Number(valores.eficiencia),
     ativa: true
   };
+  if (MODO_HOSPEDADO) {
+    const maquina = { ...corpo, id: id || proximoId(dados.maquinas) };
+    if (id) dados.maquinas[dados.maquinas.findIndex(item => item.id === id)] = maquina;
+    else dados.maquinas.push(maquina);
+    concluirFormulario("Máquina salva neste navegador.");
+    return;
+  }
   try {
     const maquina = await requisitarAPI(id ? `/maquinas/${id}` : "/maquinas", {
       method: id ? "PUT" : "POST",
